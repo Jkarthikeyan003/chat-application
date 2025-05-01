@@ -1,0 +1,295 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* GIF Picker Styles */
+.gif-picker {
+  @apply w-full max-h-[400px] overflow-hidden flex flex-col bg-white rounded-lg;
+}
+
+.gif-picker-header {
+  @apply flex items-center justify-between p-3 border-b border-gray-200;
+}
+
+.gif-search-container {
+  @apply relative flex-1 mr-2;
+}
+
+.gif-search-icon {
+  @apply absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400;
+  width: 16px;
+  height: 16px;
+}
+
+.gif-search-input {
+  @apply pl-9 pr-3 py-2 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+}
+
+.gif-close-button {
+  @apply text-gray-500 hover:text-gray-700 text-xl font-bold;
+}
+
+.gif-mood-filters {
+  @apply flex flex-wrap gap-2 p-3 border-b border-gray-200 overflow-x-auto;
+}
+
+.gif-mood-filter {
+  @apply px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors whitespace-nowrap;
+}
+
+.gif-mood-selected {
+  @apply bg-blue-100 text-blue-700 hover:bg-blue-200;
+}
+
+.gif-grid {
+  @apply grid grid-cols-2 sm:grid-cols-3 gap-3 p-3 overflow-y-auto;
+  max-height: 300px;
+}
+
+.gif-item {
+  @apply cursor-pointer rounded-lg overflow-hidden hover:opacity-80 transition-opacity;
+}
+
+.gif-thumbnail-container {
+  @apply relative;
+}
+
+.gif-thumbnail {
+  @apply w-full h-32 object-cover bg-gray-100;
+}
+
+.gif-duration {
+  @apply absolute bottom-1 right-1 bg-black bg-opacity-70 text-white text-xs px-1 py-0.5 rounded;
+}
+
+.gif-info {
+  @apply p-2 bg-gray-50;
+}
+
+.gif-transcript {
+  @apply text-sm font-medium text-gray-800 truncate;
+}
+
+.gif-movie {
+  @apply text-xs text-gray-500 truncate;
+}
+
+.gif-loading,
+.gif-error,
+.gif-empty {
+  @apply flex flex-col items-center justify-center p-8 text-center;
+}
+
+.gif-loading-spinner {
+  @apply w-10 h-10 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mb-4;
+}
+
+.gif-loading-spinner-small {
+  @apply w-6 h-6 border-2 border-blue-200 border-t-blue-500 rounded-full animate-spin;
+}
+
+.gif-loading-more {
+  @apply col-span-full flex justify-center p-4;
+}
+
+.gif-error-message {
+  @apply text-sm text-red-500 mt-1 mb-4;
+}
+
+.gif-retry-button {
+  @apply px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors;
+}
+
+.gif-empty-subtitle {
+  @apply text-sm text-gray-500 mt-1;
+}
+
+/* Message Input Styles */
+.message-input-container {
+  @apply w-full;
+}
+
+.message-input-wrapper {
+  @apply flex items-center bg-white rounded-lg border border-gray-300 p-2;
+}
+
+.message-input {
+  @apply flex-1 resize-none outline-none border-none px-3 py-1 min-h-[40px];
+}
+
+.message-input-button,
+.message-suggestion-button,
+.message-send-button {
+  @apply p-2 rounded-full transition-colors;
+}
+
+.message-input-button {
+  @apply text-gray-500 hover:bg-gray-100;
+}
+
+.message-suggestion-button {
+  @apply text-blue-500 hover:bg-blue-50;
+}
+
+.message-send-button {
+  @apply text-blue-500 hover:bg-blue-50 disabled:text-gray-400 disabled:hover:bg-transparent;
+}
+
+.message-input-loading {
+  @apply p-2;
+}
+
+/* Suggested GIFs Styles */
+.suggested-gifs-container {
+  @apply p-3 bg-white rounded-lg shadow-lg border border-gray-200;
+}
+
+.suggested-gifs-header {
+  @apply flex justify-between items-center mb-2;
+}
+
+.suggested-gifs-close {
+  @apply text-gray-500 hover:text-gray-700 text-xl font-bold;
+}
+
+.suggested-gifs-grid {
+  @apply grid grid-cols-2 gap-2;
+}
+
+.suggested-gif-item {
+  @apply cursor-pointer rounded-md overflow-hidden hover:opacity-80 transition-opacity;
+}
+
+.suggested-gif-thumbnail {
+  @apply w-full h-24 object-cover;
+}
+
+/* Login Form Styles */
+.login-container {
+  @apply min-h-screen flex items-center justify-center bg-gray-50 px-4;
+}
+
+.login-card {
+  @apply bg-white p-8 rounded-xl shadow-lg max-w-md w-full;
+}
+
+.login-header {
+  @apply text-center mb-6;
+}
+
+.login-title {
+  @apply text-2xl font-bold text-gray-900;
+}
+
+.login-subtitle {
+  @apply text-sm text-gray-500 mt-1;
+}
+
+.login-form {
+  @apply space-y-4;
+}
+
+.login-input-group {
+  @apply space-y-1;
+}
+
+.login-label {
+  @apply block text-sm font-medium text-gray-700;
+}
+
+.login-input {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+}
+
+.login-button {
+  @apply w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors;
+}
+
+.login-button-disabled {
+  @apply opacity-70 cursor-not-allowed;
+}
+
+.login-error {
+  @apply text-sm text-red-600 mt-2;
+}
+
+.login-footer {
+  @apply mt-6 text-center text-sm text-gray-500;
+}
+
+.login-link {
+  @apply font-medium text-blue-600 hover:text-blue-500;
+}

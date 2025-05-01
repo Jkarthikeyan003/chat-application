@@ -1,0 +1,22 @@
+.heading {
+    font-size: 2rem;
+    font-weight: bold;
+    color: blue;
+    margin: 1rem;
+  }
+  
+  .redBox {
+    background-color: red;
+    color: white;
+    padding: 1rem;
+    margin: 1rem;
+    border-radius: 0.25rem;
+  }
+  
+  .purpleBox {
+    background-color: purple;
+    color: white;
+    padding: 1rem;
+    margin: 1rem;
+    border-radius: 0.25rem;
+  }
