@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
 import { ObjectId } from "mongodb"
+import { verifyToken } from "@/lib/token-utils"
 
 export async function GET(request: Request) {
   try {
@@ -29,20 +30,46 @@ export async function GET(request: Request) {
     })
   } catch (error) {
     console.error("Error fetching messages:", error)
-    return NextResponse.json({ success: false, message: "Failed to fetch messages" }, { status: 500 })
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to fetch messages",
+        error: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
+    )
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { conversationId, senderId, receiverId, message, members, clipLink, gifMood } = body
+    // Get token from Authorization header
+    const authHeader = request.headers.get("authorization")
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json({ success: false, message: "Unauthorized: No token provided" }, { status: 401 })
+    }
 
-    if (!conversationId || !senderId || (!message && !clipLink)) {
+    const token = authHeader.split(" ")[1]
+    let userId
+
+    try {
+      // Verify the token
+      const decoded = await verifyToken(token)
+      userId = decoded.userId
+      console.log("Token verified for user:", userId)
+    } catch (error) {
+      console.error("Token verification failed:", error)
+      return NextResponse.json({ success: false, message: "Unauthorized: Invalid token" }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { conversationId, message, receiverId, clipLink, clipThumbnailUrl, gifMood } = body
+
+    if (!conversationId || (!message && !clipLink)) {
       return NextResponse.json(
         {
           success: false,
-          message: "Missing required fields. Required: conversationId, senderId, and either message or clipLink",
+          message: "Missing required fields. Required: conversationId and either message or clipLink",
         },
         { status: 400 },
       )
@@ -51,17 +78,45 @@ export async function POST(request: Request) {
     // Connect to MongoDB
     const { db } = await connectToDatabase()
     const messagesCollection = db.collection("messages")
+    const conversationsCollection = db.collection("conversations")
+
+    // Find the conversation to get members
+    let conversation
+    let conversationObjectId
+
+    try {
+      if (conversationId.length === 24) {
+        conversationObjectId = new ObjectId(conversationId)
+        conversation = await conversationsCollection.findOne({ _id: conversationObjectId })
+      } else {
+        conversation = await conversationsCollection.findOne({ _id: conversationId })
+        conversationObjectId = conversation?._id
+      }
+    } catch (error) {
+      console.error("Error finding conversation:", error)
+      // If we can't find the conversation, we'll create a new one below
+    }
+
+    // Determine members
+    let members = [userId]
+    if (receiverId) {
+      members.push(receiverId)
+    } else if (conversation && conversation.members) {
+      members = conversation.members
+    }
 
     // Create message object
     const messageText = message || "Sent a GIF"
     const newMessage = {
       conversationId,
-      senderId,
-      receiverId: receiverId || "unknown",
+      senderId: userId,
+      receiverId: receiverId || members.find((m) => m !== userId) || "unknown",
       text: messageText,
+      message: messageText, // For backward compatibility
       clipLink,
+      clipThumbnailUrl,
       gifMood,
-      members: Array.isArray(members) ? members : [senderId, receiverId || "unknown"],
+      members,
       read: false,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -69,20 +124,27 @@ export async function POST(request: Request) {
 
     // Insert message into database
     const result = await messagesCollection.insertOne(newMessage)
+    console.log("Message inserted with ID:", result.insertedId)
 
-    // Update conversation with last message
-    const conversationsCollection = db.collection("conversations")
-    await conversationsCollection.updateOne(
-      { _id: new ObjectId(conversationId) },
+    // Update or create conversation
+    const updateResult = await conversationsCollection.updateOne(
+      { _id: conversationObjectId || conversationId },
       {
         $set: {
           lastMessage: messageText,
           lastMessageAt: new Date(),
-          lastMessageSenderId: senderId,
+          lastMessageSenderId: userId,
           updatedAt: new Date(),
         },
+        $setOnInsert: {
+          members,
+          createdAt: new Date(),
+        },
       },
+      { upsert: true },
     )
+
+    console.log("Conversation updated:", updateResult.acknowledged)
 
     // Return success response
     return NextResponse.json({
@@ -95,6 +157,13 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error("Error saving message:", error)
-    return NextResponse.json({ success: false, message: "Failed to save message" }, { status: 500 })
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to save message",
+        error: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
+    )
   }
 }

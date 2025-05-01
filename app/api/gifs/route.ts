@@ -1,100 +1,82 @@
 import { NextResponse } from "next/server"
+import { connectToDatabase } from "@/lib/mongodb"
 
-// Define the GIF interface
-interface Gif {
-  id: string
-  url: string
-  preview: string
-  title: string
-  moods: string[]
-}
-
-// Mock GIF data with mood information
-const mockGifs: Gif[] = [
-  {
-    id: "1",
-    url: "/joyful-celebration.png",
-    preview: "/joyful-celebration.png",
-    title: "Celebration",
-    moods: ["happy", "excited", "celebration"],
-  },
-  {
-    id: "2",
-    url: "/colorful-celebration.png",
-    preview: "/colorful-celebration.png",
-    title: "Party",
-    moods: ["happy", "party", "fun"],
-  },
-  {
-    id: "3",
-    url: "/joyful-dance-party.png",
-    preview: "/joyful-dance-party.png",
-    title: "Dancing",
-    moods: ["happy", "dancing", "energetic"],
-  },
-  {
-    id: "4",
-    url: "/joyful-laughter.png",
-    preview: "/joyful-laughter.png",
-    title: "Laughing",
-    moods: ["happy", "laughing", "amused"],
-  },
-  {
-    id: "5",
-    url: "/cheerful-approval.png",
-    preview: "/cheerful-approval.png",
-    title: "Thumbs Up",
-    moods: ["approval", "positive", "agreement"],
-  },
-  {
-    id: "6",
-    url: "/startled-cat-fall.png",
-    preview: "/startled-cat-fall.png",
-    title: "Surprised Cat",
-    moods: ["surprised", "funny", "shocked"],
-  },
-  {
-    id: "7",
-    url: "/lonely-rainy-window.png",
-    preview: "/lonely-rainy-window.png",
-    title: "Rainy Day",
-    moods: ["sad", "lonely", "melancholy"],
-  },
-  {
-    id: "8",
-    url: "/heartbroken-rain.png",
-    preview: "/heartbroken-rain.png",
-    title: "Heartbreak",
-    moods: ["sad", "heartbroken", "emotional"],
-  },
-]
-
-export async function GET(request) {
+export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const query = searchParams.get("q")
+    const limit = searchParams.get("limit") ? Number.parseInt(searchParams.get("limit")!) : 60 // Default to 60 items
 
-    let filteredGifs = [...mockGifs]
+    // Connect to MongoDB
+    const { db } = await connectToDatabase()
+
+    // Build the query for the media collection
+    let dbQuery: any = { type: "gif" } // Filter by type "gif"
 
     if (query) {
       const lowerQuery = query.toLowerCase()
-      filteredGifs = mockGifs.filter(
-        (gif) =>
-          gif.title.toLowerCase().includes(lowerQuery) ||
-          gif.moods.some((mood) => mood.toLowerCase().includes(lowerQuery)),
-      )
+      // Search in all the requested fields
+      dbQuery = {
+        $and: [
+          { type: "gif" },
+          {
+            $or: [
+              { title: { $regex: lowerQuery, $options: "i" } },
+              { description: { $regex: lowerQuery, $options: "i" } },
+              { tags: { $in: [new RegExp(lowerQuery, "i")] } },
+              { movieName: { $regex: lowerQuery, $options: "i" } },
+              { artist: { $regex: lowerQuery, $options: "i" } },
+              { characterNames: { $in: [new RegExp(lowerQuery, "i")] } },
+              { mood: { $regex: lowerQuery, $options: "i" } },
+              { transcript: { $regex: lowerQuery, $options: "i" } },
+              { property: { $regex: lowerQuery, $options: "i" } },
+              { place: { $regex: lowerQuery, $options: "i" } },
+            ],
+          },
+        ],
+      }
     }
+
+    console.log("Fetching GIFs with query:", JSON.stringify(dbQuery))
+
+    // Fetch GIFs from the media collection
+    const gifs = await db.collection("media").find(dbQuery).limit(limit).toArray()
+
+    console.log(`Found ${gifs.length} GIFs in media collection`)
+
+    // Transform the data to match our expected format
+    const formattedGifs = gifs.map((gif) => ({
+      _id: gif._id.toString(),
+      id: gif._id.toString(),
+      title: gif.title || "Untitled GIF",
+      url: gif.url || gif.clipLink,
+      clipLink: gif.url || gif.clipLink,
+      preview: gif.thumbnailUrl || gif.clipThumbnailUrl,
+      clipThumbnailUrl: gif.thumbnailUrl || gif.clipThumbnailUrl,
+      tags: gif.tags || [],
+      moods: gif.tags || [],
+      // Include all the new fields
+      movieName: gif.movieName || "",
+      artist: gif.artist || "",
+      characterNames: gif.characterNames || [],
+      mood: gif.mood || "",
+      transcript: gif.transcript || "",
+      property: gif.property || "",
+      place: gif.place || "",
+      createdAt: gif.createdAt,
+    }))
 
     return NextResponse.json({
       success: true,
-      data: filteredGifs,
+      data: formattedGifs,
     })
   } catch (error) {
-    console.error("Error fetching GIFs:", error)
+    console.error("Error fetching GIFs from media collection:", error)
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to fetch GIFs",
+        message: "Failed to fetch GIFs from media collection",
+        error: error instanceof Error ? error.message : String(error),
       },
       { status: 500 },
     )

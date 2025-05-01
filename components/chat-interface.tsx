@@ -70,6 +70,8 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
         throw new Error(data.message || "Failed to fetch messages")
       }
 
+      console.log("Fetched messages:", data.data.length)
+
       // Get current user ID
       const userId = localStorage.getItem("userId")
 
@@ -134,13 +136,13 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
       // Prepare message data
       const messageData = {
         conversationId,
-        senderId: userId,
-        receiverId: "placeholder", // This will be determined on the server
         message: text,
-        members: [user.username], // Server will complete this
         clipLink: gifUrl,
+        clipThumbnailUrl: gifUrl, // Using the same URL for both
         gifMood: gifMood,
       }
+
+      console.log("Sending message:", messageData)
 
       // Send message to API
       const response = await fetch("/api/messages", {
@@ -161,6 +163,8 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
       if (!data.success) {
         throw new Error(data.message || "Failed to send message")
       }
+
+      console.log("Message sent successfully:", data.data)
 
       // Update the temporary message with the real one
       setMessages((prev) =>

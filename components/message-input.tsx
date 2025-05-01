@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Send, X, Loader2, Smile } from "lucide-react"
+import { Send, X, Loader2, Plus } from "lucide-react"
 import { ApiGifPicker } from "./api-gif-picker"
 
 interface MessageInputProps {
@@ -120,13 +120,14 @@ export function MessageInput({
       <div className="flex items-center gap-2">
         <div className="relative">
           <Button
+            type="button"
             variant="ghost"
             size="icon"
+            className="h-9 w-9 rounded-full"
             onClick={() => setShowGifPicker(!showGifPicker)}
-            className="shrink-0"
-            aria-label="Add GIF"
           >
-            <Smile size={20} />
+            <Plus className="h-5 w-5" />
+            <span className="sr-only">Add GIF</span>
           </Button>
         </div>
 
