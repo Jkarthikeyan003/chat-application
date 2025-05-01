@@ -16,7 +16,7 @@ interface Message {
   updatedAt?: Date
 }
 
-export async function GET(request: Request) {
+export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
     const conversationId = searchParams.get("conversationId")
@@ -67,7 +67,7 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request) {
   try {
     const { conversationId, content, gifUrl, gifMood } = await request.json()
 
