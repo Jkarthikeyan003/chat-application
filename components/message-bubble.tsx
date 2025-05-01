@@ -1,70 +1,67 @@
+"use client"
+
 import { format } from "date-fns"
-import Image from "next/image"
+import { Reply } from "lucide-react"
 
-interface Message {
-  id: string
-  sender: "user" | "other"
-  text: string
-  timestamp: Date
-  type?: "text" | "image" | "gif"
-  content?: string
-  thumbnailUrl?: string
-  gifMood?: string[]
-}
-
-interface MessageBubbleProps {
-  message: Message
-  isUser: boolean
-}
-
-export function MessageBubble({ message, isUser }: MessageBubbleProps) {
-  const formattedTime = format(new Date(message.timestamp), "h:mm a")
-
-  const renderContent = () => {
-    switch (message.type) {
-      case "image":
-        return (
-          <div className="relative rounded-lg overflow-hidden mb-1">
-            <Image
-              src={message.content || "/placeholder.svg?height=200&width=300&query=image"}
-              alt="Image"
-              width={300}
-              height={200}
-              className="max-w-full rounded-lg"
-            />
-          </div>
-        )
-      case "gif":
-        return (
-          <div className="relative rounded-lg overflow-hidden mb-1">
-            <Image
-              src={message.content || "/placeholder.svg?height=200&width=300&query=gif"}
-              alt="GIF"
-              width={300}
-              height={200}
-              className="max-w-full rounded-lg"
-            />
-            {message.gifMood && message.gifMood.length > 0 && (
-              <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
-                {message.gifMood.join(", ")}
-              </div>
-            )}
-          </div>
-        )
-      default:
-        return <p className="mb-1">{message.text}</p>
-    }
+interface MessageProps {
+  message: {
+    id: string
+    text?: string
+    gifUrl?: string
+    sender: string
+    timestamp: Date | string
+    isCurrentUser: boolean
+    gifMood?: string
   }
+  onReply: () => void
+}
+
+export function MessageBubble({ message, onReply }: MessageProps) {
+  const formattedTime =
+    typeof message.timestamp === "string"
+      ? format(new Date(message.timestamp), "h:mm a")
+      : format(message.timestamp, "h:mm a")
+
+  const isGif = !!message.gifUrl
 
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+    <div className={`flex mb-4 ${message.isCurrentUser ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-[70%] p-3 rounded-lg ${
-          isUser ? "bg-blue-600 text-white rounded-tr-none" : "bg-gray-100 text-gray-800 rounded-tl-none"
+        className={`relative max-w-[70%] ${
+          message.isCurrentUser
+            ? "bg-blue-600 text-white rounded-tl-lg rounded-tr-none rounded-bl-lg rounded-br-lg"
+            : "bg-gray-100 text-gray-800 rounded-tl-none rounded-tr-lg rounded-bl-lg rounded-br-lg"
         }`}
       >
-        {renderContent()}
-        <div className={`text-xs ${isUser ? "text-blue-200" : "text-gray-500"} text-right`}>{formattedTime}</div>
+        {isGif ? (
+          <div className="overflow-hidden">
+            <img
+              src={message.gifUrl || "/placeholder.svg"}
+              alt="GIF"
+              className="w-full h-auto rounded-t-lg"
+              onError={(e) => {
+                e.currentTarget.src = "/gif-error.png"
+              }}
+            />
+            {message.text && <div className="p-3">{message.text}</div>}
+          </div>
+        ) : (
+          <div className="p-3">{message.text}</div>
+        )}
+
+        <div className="flex items-center justify-between px-3 pb-1">
+          <button
+            onClick={onReply}
+            className={`text-xs mr-2 opacity-50 hover:opacity-100 ${
+              message.isCurrentUser ? "text-white" : "text-gray-600"
+            }`}
+          >
+            <Reply size={14} />
+          </button>
+          <span className={`text-xs ${message.isCurrentUser ? "text-blue-100" : "text-gray-500"}`}>
+            {formattedTime}
+          </span>
+        </div>
       </div>
     </div>
   )
